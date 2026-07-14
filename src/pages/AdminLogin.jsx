@@ -38,7 +38,11 @@ export default function AdminLogin() {
 
     const err = await signIn(email, password);
     setLoading(false);
-    if (err) setError('Email o contraseña incorrectos.');
+    if (err) {
+      setError('Email o contraseña incorrectos.');
+    } else {
+      navigate('/admin');
+    }
   }
 
   return (
