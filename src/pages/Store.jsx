@@ -7,9 +7,11 @@ import CartDrawer from '../components/CartDrawer';
 import Footer from '../components/Footer';
 import FloatingSocials from '../components/FloatingSocials';
 import { useCatalog } from '../lib/useCatalog';
+import { useCart } from '../context/CartContext';
 
 export default function Store() {
   const { categories, products, loading, error } = useCatalog();
+  const { isOpen } = useCart();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
 
@@ -35,7 +37,7 @@ export default function Store() {
   }, [categories, filtered]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col transition-[padding] duration-300 ease-in-out ${isOpen ? 'lg:pr-[28rem]' : ''}`}>
       <Header search={search} onSearchChange={setSearch} />
       <HeroSlider />
 
