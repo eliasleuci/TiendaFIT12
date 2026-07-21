@@ -98,7 +98,7 @@ export default function CartDrawer() {
                     <p className="font-mono text-xs text-ink/50 mt-0.5">{currency.format(item.price)} c/u</p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
-                        onClick={() => updateQty(item.id, item.qty - (item.isWeighable ? 0.5 : 1))}
+                        onClick={() => updateQty(item.id, item.qty - 1)}
                         className="w-7 h-7 flex items-center justify-center rounded-full border border-ink/20 text-ink hover:border-moss-600"
                       >
                         −
@@ -107,11 +107,11 @@ export default function CartDrawer() {
                         <div className="flex items-center">
                           <input
                             type="number"
-                            step="0.1"
-                            min="0.1"
+                            step="1"
+                            min="1"
                             value={item.qty}
                             onChange={(e) => {
-                              const val = parseFloat(e.target.value);
+                              const val = parseInt(e.target.value, 10);
                               if (!isNaN(val)) updateQty(item.id, val);
                             }}
                             className="font-mono text-sm w-12 text-center bg-transparent border-b border-ink/20 focus:outline-none focus:border-moss-600 appearance-none"
@@ -122,7 +122,7 @@ export default function CartDrawer() {
                         <span className="font-mono text-sm w-6 text-center">{item.qty}</span>
                       )}
                       <button
-                        onClick={() => updateQty(item.id, item.qty + (item.isWeighable ? 0.5 : 1))}
+                        onClick={() => updateQty(item.id, item.qty + 1)}
                         className="w-7 h-7 flex items-center justify-center rounded-full border border-ink/20 text-ink hover:border-moss-600"
                       >
                         +
