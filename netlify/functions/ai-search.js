@@ -39,9 +39,12 @@ export default async (req, context) => {
     });
   }
 
-  // Catálogo compacto para no desperdiciar tokens
+  // Catálogo compacto optimizado para ahorrar tokens sin perder precisión
   const catalog = products
-    .map((p) => `${p.id}|${p.name}${p.description ? ' - ' + p.description : ''}|${p.category}`)
+    .map((p) => {
+      const desc = p.description ? ` (${p.description.slice(0, 70).replace(/[\n\r]+/g, ' ')})` : '';
+      return `${p.id}|${p.name}${desc}|${p.category}`;
+    })
     .join('\n');
 
   const systemPrompt = `Sos el asistente de búsqueda de FIT12, una dietética en Córdoba, Argentina.

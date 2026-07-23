@@ -8,13 +8,14 @@ const currency = new Intl.NumberFormat('es-AR', {
 });
 
 const SUGGESTIONS = [
-  'algo para el mate con cafeína natural',
-  'suplementos para ganar músculo',
-  'endulzante sin azúcar',
-  'frutos secos para snack',
-  'hierbas para dormir mejor',
-  'proteína sin tacc',
-  'especias para cocinar a la italiana',
+  '🌿 hierbas para la digestión o acidez',
+  '🥜 frutos secos para snack saludable',
+  '🍯 endulzantes naturales sin azúcar',
+  '💪 suplementos y proteínas para entrenar',
+  '🧉 algo sano para acompañar el mate',
+  '🧂 especias y condimentos para cocinar',
+  '🥥 aceite de coco y frutos desecados',
+  '😴 té o hierbas para relajar y dormir',
 ];
 
 export default function AISearch({ products, categories, isOpen, onClose }) {
