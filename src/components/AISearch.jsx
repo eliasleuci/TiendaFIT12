@@ -27,15 +27,20 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
   const [error, setError] = useState('');
   const inputRef = useRef(null);
 
-  // Foco al abrir
+  // Bloquear scroll de fondo al abrir modal (clave en iOS Safari)
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 80);
+      document.body.style.overflow = 'hidden';
       setQuery('');
       setResults(null);
       setAiMessage('');
       setError('');
+    } else {
+      document.body.style.overflow = '';
     }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   // Cerrar con Escape
@@ -102,15 +107,15 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-[10vh] px-3 sm:px-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-3 sm:pt-[10vh] px-3 sm:px-4">
       {/* Backdrop — sin backdrop-blur para evitar fallos de GPU en iOS Safari */}
       <div
-        className="absolute inset-0 bg-moss-900/85"
+        className="absolute inset-0 bg-moss-900/90"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="relative w-full max-w-2xl bg-paper rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[80vh]">
+      <div className="relative w-full max-w-2xl bg-paper rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[80vh]">
 
         {/* Header */}
         <div className="bg-moss-700 px-4 sm:px-5 py-3.5 flex items-center gap-3 shrink-0">
@@ -145,7 +150,9 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
           >
             <input
               ref={inputRef}
-              type="search"
+              type="text"
+              inputMode="search"
+              enterKeyHint="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ej: algo para la digestión o acidez..."
