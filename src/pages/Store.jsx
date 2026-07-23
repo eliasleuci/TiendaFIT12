@@ -6,6 +6,7 @@ import ProductGrid from '../components/ProductGrid';
 import CartDrawer from '../components/CartDrawer';
 import Footer from '../components/Footer';
 import FloatingSocials from '../components/FloatingSocials';
+import AISearch from '../components/AISearch';
 import { useCatalog } from '../lib/useCatalog';
 import { useCart } from '../context/CartContext';
 
@@ -14,6 +15,7 @@ export default function Store() {
   const { isOpen } = useCart();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
+  const [aiSearchOpen, setAiSearchOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -38,7 +40,11 @@ export default function Store() {
 
   return (
     <div className={`min-h-screen flex flex-col transition-[padding] duration-300 ease-in-out ${isOpen ? 'lg:pr-[28rem]' : ''}`}>
-      <Header search={search} onSearchChange={setSearch} />
+      <Header
+        search={search}
+        onSearchChange={setSearch}
+        onAISearch={() => setAiSearchOpen(true)}
+      />
       <HeroSlider />
 
       {/* Info Banner */}
@@ -67,6 +73,21 @@ export default function Store() {
       <Footer />
       <CartDrawer />
       <FloatingSocials />
+
+      {/* Botón IA flotante en mobile */}
+      <button
+        onClick={() => setAiSearchOpen(true)}
+        className="fixed bottom-5 right-5 z-30 sm:hidden flex items-center gap-2 bg-moss-700 text-paper rounded-full px-4 py-3 shadow-xl font-semibold text-sm hover:bg-moss-600 transition-colors"
+      >
+        <span>✨</span> Buscar con IA
+      </button>
+
+      <AISearch
+        products={products}
+        categories={categories}
+        isOpen={aiSearchOpen}
+        onClose={() => setAiSearchOpen(false)}
+      />
     </div>
   );
 }

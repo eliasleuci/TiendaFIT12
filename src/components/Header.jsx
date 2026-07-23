@@ -1,7 +1,7 @@
 import { useCart } from '../context/CartContext';
 import { STORE_NAME } from '../lib/config';
 
-export default function Header({ search, onSearchChange }) {
+export default function Header({ search, onSearchChange, onAISearch }) {
   const { itemCount, setIsOpen } = useCart();
 
   return (
@@ -13,7 +13,7 @@ export default function Header({ search, onSearchChange }) {
             {STORE_NAME}
             <span className="text-turmeric-400">.</span>
           </a>
-          {/* Cart button visible on mobile in top row */}
+          {/* Cart button — mobile */}
           <button
             onClick={() => setIsOpen(true)}
             className="sm:hidden relative flex items-center gap-2 rounded-full bg-turmeric-400 text-moss-900 font-semibold px-4 py-2 text-sm hover:bg-turmeric-500 transition-colors shrink-0"
@@ -27,22 +27,35 @@ export default function Header({ search, onSearchChange }) {
           </button>
         </div>
 
-        {/* Search bar - full width on mobile, flex on desktop */}
-        <div className="flex-1 relative">
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Buscar por nombre o código..."
-            aria-label="Buscar productos"
-            className="w-full rounded-full bg-moss-600/60 border border-moss-400/40 text-paper placeholder:text-paper/60 px-4 py-2 text-sm focus:bg-moss-900 transition-colors"
-          />
+        {/* Search row */}
+        <div className="flex-1 flex items-center gap-2">
+          {/* Buscador normal */}
+          <div className="flex-1 relative">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Buscar por nombre o código..."
+              aria-label="Buscar productos"
+              className="w-full rounded-full bg-moss-600/60 border border-moss-400/40 text-paper placeholder:text-paper/60 px-4 py-2 text-sm focus:bg-moss-900 transition-colors"
+            />
+          </div>
+
+          {/* Botón IA */}
+          <button
+            onClick={onAISearch}
+            title="Búsqueda inteligente con IA"
+            className="shrink-0 flex items-center gap-1.5 rounded-full bg-turmeric-400/20 border border-turmeric-400/50 text-turmeric-400 hover:bg-turmeric-400 hover:text-moss-900 font-semibold px-3 py-2 text-sm transition-all"
+          >
+            <span className="text-base leading-none">✨</span>
+            <span className="hidden sm:inline text-xs font-semibold">IA</span>
+          </button>
         </div>
 
-        {/* Cart button for desktop only */}
+        {/* Cart button — desktop */}
         <button
           onClick={() => setIsOpen(true)}
-          className="hidden sm:relative sm:flex items-center gap-2 rounded-full bg-turmeric-400 text-moss-900 font-semibold px-4 py-2 text-sm hover:bg-turmeric-500 transition-colors shrink-0"
+          className="hidden sm:flex relative items-center gap-2 rounded-full bg-turmeric-400 text-moss-900 font-semibold px-4 py-2 text-sm hover:bg-turmeric-500 transition-colors shrink-0"
         >
           Pedido
           {itemCount > 0 && (
