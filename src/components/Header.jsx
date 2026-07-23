@@ -45,10 +45,10 @@ export default function Header({ search, onSearchChange, onAISearch }) {
           <button
             onClick={onAISearch}
             title="Búsqueda inteligente con IA"
-            className="shrink-0 relative flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 via-turmeric-400 to-amber-500 text-moss-950 font-bold px-3.5 py-1.5 text-xs sm:text-sm shadow-lg shadow-amber-400/30 hover:shadow-amber-400/50 hover:scale-105 active:scale-95 transition-all ring-2 ring-amber-300/40 border border-white/20"
+            className="shrink-0 flex items-center gap-1.5 rounded-full bg-turmeric-400 text-moss-900 font-semibold px-3.5 py-2 text-xs sm:text-sm hover:bg-turmeric-500 transition-colors shadow-sm"
           >
-            <span className="text-sm leading-none animate-pulse">✨</span>
-            <span className="font-extrabold tracking-wide">IA</span>
+            <span className="text-sm leading-none">✨</span>
+            <span>IA</span>
           </button>
         </div>
 

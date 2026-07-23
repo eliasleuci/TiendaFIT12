@@ -77,9 +77,9 @@ export default function Store() {
       {/* Botón IA flotante en mobile */}
       <button
         onClick={() => setAiSearchOpen(true)}
-        className="fixed bottom-5 right-5 z-30 sm:hidden flex items-center gap-2 bg-gradient-to-r from-amber-400 via-turmeric-400 to-amber-500 text-moss-950 rounded-full px-5 py-3 shadow-2xl font-extrabold text-sm hover:scale-105 active:scale-95 transition-all border border-white/30 ring-4 ring-amber-400/30"
+        className="fixed bottom-5 right-5 z-30 sm:hidden flex items-center gap-2 bg-turmeric-400 text-moss-900 rounded-full px-4 py-3 shadow-lg font-semibold text-sm hover:bg-turmeric-500 transition-colors"
       >
-        <span className="text-base animate-pulse">✨</span> Buscar con IA
+        <span>✨</span> Buscar con IA
       </button>
 
       <AISearch
