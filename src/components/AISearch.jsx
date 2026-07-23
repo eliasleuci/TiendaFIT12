@@ -47,21 +47,24 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
 
-  // Construimos el catálogo compacto para la API
+  // Construimos el catálogo compacto para la API (optimizado para móviles)
   const buildCatalog = useCallback(() => {
+    if (!products || !Array.isArray(products)) return [];
     const catMap = {};
-    categories.forEach((c) => { catMap[c.id] = c.name; });
+    if (categories && Array.isArray(categories)) {
+      categories.forEach((c) => { if (c && c.id) catMap[c.id] = c.name; });
+    }
     return products.map((p) => ({
       id: p.id,
-      name: p.name,
-      description: p.description || '',
+      name: p.name || '',
+      description: p.description ? p.description.slice(0, 50) : '',
       category: catMap[p.category_id] || '',
     }));
   }, [products, categories]);
 
   async function handleSearch(q = query) {
     const term = q.trim();
-    if (!term) return;
+    if (!term || loading) return;
     setLoading(true);
     setError('');
     setResults(null);
@@ -78,12 +81,13 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
 
       const data = await res.json();
       const matchedProducts = (data.ids || [])
-        .map((id) => products.find((p) => p.id === id))
+        .map((id) => products.find((p) => p && p.id === id))
         .filter(Boolean);
 
       setResults(matchedProducts);
       setAiMessage(data.message || '');
-    } catch {
+    } catch (err) {
+      console.error('AI search error:', err);
       setError('No pudimos conectar con la IA. Revisá tu conexión o intentá de nuevo.');
     } finally {
       setLoading(false);
@@ -95,37 +99,33 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
     handleSearch(s);
   }
 
-  function handleKeyDown(e) {
-    if (e.key === 'Enter') handleSearch();
-  }
-
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-4 sm:pt-[10vh] px-3 sm:px-4">
+      {/* Backdrop — sin backdrop-blur para evitar fallos de GPU en iOS Safari */}
       <div
-        className="absolute inset-0 bg-moss-900/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-moss-900/85"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="relative w-full max-w-2xl bg-paper rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+      <div className="relative w-full max-w-2xl bg-paper rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[80vh]">
 
         {/* Header */}
-        <div className="bg-moss-700 px-5 py-4 flex items-center gap-3">
+        <div className="bg-moss-700 px-4 sm:px-5 py-3.5 flex items-center gap-3 shrink-0">
           <span className="text-2xl">✨</span>
-          <div className="flex-1">
-            <h2 className="font-display text-lg font-semibold text-paper leading-tight">
+          <div className="flex-1 min-w-0">
+            <h2 className="font-display text-base sm:text-lg font-semibold text-paper leading-tight">
               Buscador inteligente
             </h2>
-            <p className="text-moss-100/70 text-xs">
-              Describí lo que buscás en tus palabras — la IA encuentra los productos
+            <p className="text-moss-100/70 text-xs truncate">
+              Describí lo que buscás — la IA encuentra los productos
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-paper/60 hover:text-paper transition-colors"
+            className="text-paper/60 hover:text-paper p-1 transition-colors shrink-0"
             aria-label="Cerrar"
           >
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -134,22 +134,27 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Input */}
-        <div className="px-5 py-4 border-b border-ink/10">
-          <div className="flex gap-2">
+        {/* Form Input */}
+        <div className="px-4 sm:px-5 py-3.5 border-b border-ink/10 shrink-0">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSearch();
+            }}
+            className="flex gap-2"
+          >
             <input
               ref={inputRef}
-              type="text"
+              type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ej: algo para bajar el colesterol de forma natural..."
-              className="flex-1 rounded-xl border border-ink/20 bg-white px-4 py-2.5 text-sm focus:outline-none focus:border-moss-500 focus:ring-1 focus:ring-moss-500/30"
+              placeholder="Ej: algo para la digestión o acidez..."
+              className="flex-1 rounded-xl border border-ink/20 bg-white px-3.5 py-2 text-sm focus:outline-none focus:border-moss-500 focus:ring-1 focus:ring-moss-500/30"
             />
             <button
-              onClick={() => handleSearch()}
+              type="submit"
               disabled={loading || !query.trim()}
-              className="rounded-xl bg-turmeric-400 text-moss-900 font-semibold px-5 py-2.5 text-sm hover:bg-turmeric-500 disabled:opacity-40 transition-colors shrink-0"
+              className="rounded-xl bg-turmeric-400 text-moss-900 font-semibold px-4 py-2 text-sm hover:bg-turmeric-500 disabled:opacity-40 transition-colors shrink-0 flex items-center justify-center min-w-[4rem]"
             >
               {loading ? (
                 <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -158,7 +163,7 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
                 </svg>
               ) : 'Buscar'}
             </button>
-          </div>
+          </form>
 
           {/* Sugerencias */}
           {!results && !loading && (
@@ -217,11 +222,10 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
                 </div>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {results.map((product, i) => (
+                {results.map((product) => (
                   <div
-                    key={product.id}
-                    className="flex items-start justify-between gap-3 bg-white/60 border border-ink/10 rounded-xl p-3 hover:border-moss-500 hover:bg-white/90 transition-all"
-                    style={{ animationDelay: `${i * 40}ms` }}
+                    key={product.id || product.name}
+                    className="flex items-start justify-between gap-3 bg-white/80 border border-ink/10 rounded-xl p-3 hover:border-moss-500 transition-all"
                   >
                     <div className="flex-1 min-w-0">
                       {product.code && (
@@ -229,12 +233,12 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
                           #{product.code}
                         </span>
                       )}
-                      <p className="font-display text-sm font-semibold text-ink leading-snug">{product.name}</p>
+                      <p className="font-display text-sm font-semibold text-ink leading-snug">{product.name || ''}</p>
                       {product.description && (
                         <p className="text-xs text-ink/50 mt-0.5 line-clamp-1">{product.description}</p>
                       )}
                       <p className="font-mono text-sm font-bold text-paprika-500 mt-1.5">
-                        {currency.format(product.price)}
+                        {currency.format(product?.price || 0)}
                       </p>
                     </div>
                     <button
