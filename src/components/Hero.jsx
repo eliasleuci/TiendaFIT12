@@ -11,11 +11,11 @@ export default function Hero({ productCount, categoryCount }) {
           {STORE_TAGLINE}, directo desde el mostrador.
         </h1>
         <div className="mt-5 max-w-xl text-moss-100/90 text-base sm:text-lg flex flex-col gap-1">
-          <p>🌿 Productos saludables & sin TACC</p>
-          <p>🥜 Frutos secos • Suplementos • Aceites</p>
-          <p>🌶️ Especies y Condimentos</p>
-          <p>📦 Envíos sin cargo</p>
-          <p>📍 Córdoba | 🛒 Pedí online 👇</p>
+          <p>Productos saludables &amp; sin TACC</p>
+          <p>Frutos secos • Suplementos • Aceites</p>
+          <p>Especies y Condimentos</p>
+          <p>Envíos sin cargo</p>
+          <p>Córdoba | Pedí online 👇</p>
         </div>
 
         <div className="mt-8 flex gap-8 font-mono text-sm">

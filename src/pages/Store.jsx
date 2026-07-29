@@ -47,14 +47,14 @@ export default function Store() {
       />
       <HeroSlider />
 
-      {/* Info Banner */}
+      {/* Info Banner - Without Emojis */}
       <div className="bg-moss-700 text-paper border-b border-moss-900/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-y-2 sm:gap-x-8 sm:gap-y-3 text-sm sm:text-base font-medium">
-          <span className="flex items-center gap-2"><span>🌿</span> Productos saludables &amp; sin TACC</span>
-          <span className="flex items-center gap-2"><span>🥜</span> Frutos secos • Suplementos • Aceites</span>
-          <span className="flex items-center gap-2"><span>🌶️</span> Especies y Condimentos</span>
-          <span className="flex items-center gap-2"><span>📦</span> Envíos sin cargo</span>
-          <span className="flex items-center gap-2"><span>📍</span> Córdoba</span>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:flex-wrap justify-center items-center gap-y-1.5 sm:gap-x-8 sm:gap-y-3 text-sm sm:text-base font-medium text-center">
+          <span>Productos saludables &amp; sin TACC</span>
+          <span>Frutos secos • Suplementos • Aceites</span>
+          <span>Especies y Condimentos</span>
+          <span>Envíos sin cargo</span>
+          <span>Córdoba</span>
         </div>
       </div>
 
@@ -74,14 +74,19 @@ export default function Store() {
       <CartDrawer />
       <FloatingSocials />
 
-      {/* Botón IA flotante en mobile */}
-      <button
-        onClick={() => setAiSearchOpen(true)}
-        className="fixed bottom-5 right-5 z-30 sm:hidden flex items-center gap-2 bg-turmeric-400 text-moss-900 rounded-full px-4 py-3 shadow-lg font-semibold text-sm hover:bg-turmeric-500 transition-colors"
-      >
-        <span>✨</span> Buscar con IA
-      </button>
+      {/* Floating AI Search Button - Mobile only, hidden when cart drawer is open */}
+      {!isOpen && (
+        <button
+          onClick={() => setAiSearchOpen(true)}
+          className="sm:hidden fixed right-4 bottom-4 z-40 flex items-center gap-2 rounded-full bg-turmeric-400 text-moss-900 font-semibold px-4 py-2.5 text-sm shadow-xl hover:bg-turmeric-500 hover:scale-105 active:scale-95 transition-all"
+          aria-label="Buscar con IA"
+        >
+          <span className="text-base">✨</span>
+          <span>Buscar con IA</span>
+        </button>
+      )}
 
+      {/* AI Search Modal */}
       <AISearch
         products={products}
         categories={categories}

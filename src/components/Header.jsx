@@ -27,10 +27,9 @@ export default function Header({ search, onSearchChange, onAISearch }) {
           </button>
         </div>
 
-        {/* Search row */}
+        {/* Search bar + desktop AI search button (hidden on mobile) */}
         <div className="flex-1 flex items-center gap-2">
-          {/* Buscador normal */}
-          <div className="flex-1 relative">
+          <div className="relative flex-1">
             <input
               type="search"
               value={search}
@@ -40,14 +39,14 @@ export default function Header({ search, onSearchChange, onAISearch }) {
               className="w-full rounded-full bg-moss-600/60 border border-moss-400/40 text-paper placeholder:text-paper/60 px-4 py-2 text-sm focus:bg-moss-900 transition-colors"
             />
           </div>
-
-          {/* Botón IA */}
+          {/* AI Search button: HIDDEN on mobile (hidden), VISIBLE on desktop (sm:inline-flex) */}
           <button
+            type="button"
             onClick={onAISearch}
-            title="Búsqueda inteligente con IA"
-            className="shrink-0 flex items-center gap-1.5 rounded-full bg-turmeric-400 text-moss-900 font-semibold px-3.5 py-2 text-xs sm:text-sm hover:bg-turmeric-500 transition-colors shadow-sm"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-turmeric-400 text-moss-900 font-semibold px-3.5 py-2 text-xs sm:text-sm hover:bg-turmeric-500 transition-all shrink-0 shadow-sm active:scale-95"
+            title="Buscador inteligente con IA"
           >
-            <span className="text-sm leading-none">✨</span>
+            <span>✨</span>
             <span>IA</span>
           </button>
         </div>
