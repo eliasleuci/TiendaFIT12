@@ -35,6 +35,34 @@ export function CartProvider({ children }) {
     setIsOpen(true);
   }
 
+  function addMultipleItems(productsList) {
+    if (!productsList || !Array.isArray(productsList) || productsList.length === 0) return;
+    setItems((prev) => {
+      let updated = [...prev];
+      productsList.forEach((product) => {
+        if (!product || !product.id) return;
+        const existingIdx = updated.findIndex((i) => i.id === product.id);
+        if (existingIdx >= 0) {
+          updated[existingIdx] = {
+            ...updated[existingIdx],
+            qty: updated[existingIdx].qty + 1,
+          };
+        } else {
+          updated.push({
+            id: product.id,
+            code: product.code,
+            name: product.name,
+            price: product.price,
+            qty: 1,
+            isWeighable: checkIsWeighable(product),
+          });
+        }
+      });
+      return updated;
+    });
+    setIsOpen(true);
+  }
+
   function updateQty(id, qty) {
     if (qty <= 0) {
       removeItem(id);
@@ -60,6 +88,7 @@ export function CartProvider({ children }) {
   const value = {
     items,
     addItem,
+    addMultipleItems,
     updateQty,
     removeItem,
     clearCart,

@@ -47,20 +47,27 @@ export default async (req, context) => {
     })
     .join('\n');
 
-  const systemPrompt = `Sos el asistente de búsqueda de FIT12, una dietética en Córdoba, Argentina.
-Tu única tarea es encontrar productos relevantes para lo que pide el cliente.
+  const systemPrompt = `Sos Nutri-Bot, el Asistente Nutricional y Estilista de Salud Inteligente de FIT12 (dietética y nutrición deportiva en Córdoba, Argentina).
 
-Catálogo (formato: id|nombre y descripción|categoría):
+Tu objetivo es ser súper útil, profesional y entusiasta. Podés responder dos tipos de consultas:
+1) Búsqueda directa o Receta/Objetivo (ej: "Quiero desayunos proteicos para la semana", "Receta de pancakes fit", "Pegar receta..."): Armá el combo ideal seleccionando los productos exactos del catálogo.
+2) Duda Nutricional/Deportiva (ej: "¿La proteína se toma antes o después de entrenar?", "¿Qué comer para la masa muscular?"): Explicá brevemente con fundamento científico y recomendá los productos pertinentes de FIT12.
+
+Catálogo de FIT12 (formato: id|nombre y descripción|categoría):
 ${catalog}
 
-Reglas:
-- Respondé SOLO con un JSON válido, sin texto adicional, sin markdown, sin explicaciones.
-- El JSON debe tener esta forma exacta: {"ids": ["id1", "id2", ...], "message": "texto breve"}
-- "ids": lista de IDs de productos relevantes (máximo 12). Si no hay nada relevante, devolvé [].
-- "message": una frase corta y amigable explicando qué encontraste (ej: "Encontré 5 suplementos que te pueden servir 💪").
-- Pensá en sinónimos, usos y categorías relacionadas. Ej: "proteína" → Whey, creatina, colágeno.
-- Si la búsqueda es vaga (ej: "algo dulce", "para el mate"), sé creativo pero relevante.
-- No menciones precios ni inventés productos que no estén en el catálogo.`;
+Reglas Estrictas:
+- Respondé ÚNICAMENTE con un JSON válido, sin bloques de markdown adicionales ni explicaciones fuera del JSON.
+- Formato del JSON:
+{
+  "ids": ["id1", "id2", ...],
+  "message": "Frase corta y motivadora sobre lo que armaste o encontraste",
+  "recipeTitle": "Título del Combo o Receta (o nulo si es una búsqueda simple)",
+  "nutriTip": "Consejo nutricional experto o respuesta detallada a la duda del cliente (máx 3-4 oraciones, claro y conciso)"
+}
+- "ids": máximo 8-10 productos más relevantes del catálogo de FIT12. Si no hay coincidencias exactas, sugerí las mejores alternativas saludables.
+- No inventes IDs ni productos que no existan en el catálogo.
+- Si el usuario pega una receta custom, busca en el catálogo los ingredientes equivalente.`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -72,8 +79,8 @@ Reglas:
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
-        messages: [{ role: 'user', content: `Busco: "${query}"` }],
+        max_tokens: 700,
+        messages: [{ role: 'user', content: `Consulta: "${query}"` }],
         system: systemPrompt,
       }),
     });
@@ -97,13 +104,18 @@ Reglas:
     } catch {
       console.error('JSON parse error from Claude:', text);
       return new Response(
-        JSON.stringify({ ids: [], message: 'No encontré resultados para esa búsqueda.' }),
+        JSON.stringify({ ids: [], message: 'No encontré resultados exactos para esa consulta.', nutriTip: null, recipeTitle: null }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     return new Response(
-      JSON.stringify({ ids: parsed.ids || [], message: parsed.message || '' }),
+      JSON.stringify({
+        ids: parsed.ids || [],
+        message: parsed.message || '',
+        nutriTip: parsed.nutriTip || null,
+        recipeTitle: parsed.recipeTitle || null,
+      }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (err) {
