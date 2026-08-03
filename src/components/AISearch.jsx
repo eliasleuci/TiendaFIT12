@@ -132,17 +132,17 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
       <div className="relative w-full max-w-2xl bg-paper rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] sm:max-h-[85vh]">
 
         {/* Header */}
-        <div className="bg-moss-700 px-4 sm:px-5 py-3.5 flex items-center gap-3 shrink-0 border-b border-moss-800">
+        <div className="bg-moss-700 rounded-t-2xl px-4 sm:px-5 py-3.5 flex items-center gap-3 shrink-0 border-b border-moss-800">
           <span className="text-2xl">🤖</span>
           <div className="flex-1 min-w-0">
             <h2 className="font-display text-base sm:text-lg font-semibold text-paper leading-tight flex items-center gap-2">
-              <span>Nutri-Bot &amp; Asistente IA</span>
-              <span className="bg-turmeric-400/20 text-turmeric-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-turmeric-400/30 uppercase tracking-wider">
-                v2.0
+              <span>FitBot</span>
+              <span className="text-turmeric-300 text-xs font-sans font-normal opacity-90">
+                · Asistente Nutricional
               </span>
             </h2>
             <p className="text-moss-100/70 text-xs truncate">
-              Pedí recetas, combos, o consultá dudas nutricionales sobre tus metas
+              Pedí recetas, combos o consultá dudas sobre tu alimentación y metas
             </p>
           </div>
           <button
@@ -222,7 +222,7 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
                 <div className="absolute inset-0 rounded-full border-4 border-moss-700/20" />
                 <div className="absolute inset-0 rounded-full border-4 border-moss-700 border-t-transparent animate-spin" />
               </div>
-              <p className="text-sm font-medium text-moss-800">Nutri-Bot analizando tu consulta y catálogo...</p>
+              <p className="text-sm font-medium text-moss-800">FitBot analizando tu consulta y catálogo...</p>
             </div>
           )}
 
@@ -242,7 +242,7 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
               {nutriTip && (
                 <div className="mt-4 text-left bg-turmeric-50/80 border border-turmeric-400/30 rounded-xl p-4 text-xs text-moss-900">
                   <p className="font-bold text-moss-800 flex items-center gap-1.5 mb-1">
-                    <span>💡 Consejo de Nutri-Bot:</span>
+                    <span>💡 Consejo de FitBot:</span>
                   </p>
                   <p>{nutriTip}</p>
                 </div>
@@ -287,7 +287,7 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
                 <div className="bg-gradient-to-br from-moss-50 to-emerald-50/50 border border-moss-600/20 rounded-xl p-3.5 sm:p-4 text-xs text-moss-900 shadow-sm">
                   <div className="flex items-center gap-2 font-bold text-moss-800 text-xs uppercase tracking-wider mb-1.5">
                     <span className="text-base">🌿</span>
-                    <span>Asesoramiento Nutri-Bot FIT12</span>
+                    <span>Asesoramiento FitBot</span>
                   </div>
                   <p className="leading-relaxed text-ink/80">{nutriTip}</p>
                 </div>
@@ -328,9 +328,9 @@ export default function AISearch({ products, categories, isOpen, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-2.5 border-t border-ink/8 bg-ink/[0.02]">
+        <div className="px-5 py-2.5 border-t border-ink/8 bg-ink/[0.02] rounded-b-2xl">
           <p className="text-center text-xs text-ink/40">
-            Presioná <kbd className="font-mono bg-ink/10 px-1.5 py-0.5 rounded text-[10px]">Esc</kbd> para cerrar · Powered by Claude AI &amp; FIT12
+            Presioná <kbd className="font-mono bg-ink/10 px-1.5 py-0.5 rounded text-[10px]">Esc</kbd> para cerrar · FitBot IA
           </p>
         </div>
       </div>
