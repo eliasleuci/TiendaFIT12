@@ -54,6 +54,7 @@ export default function CartDrawer() {
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
   const [markerPos, setMarkerPos] = useState(null);
   const [mapZoom, setMapZoom] = useState(12);
+  const [isLocating, setIsLocating] = useState(false);
 
   const autocompleteRef = useRef(null);
 
@@ -91,6 +92,45 @@ export default function CartDrawer() {
       }
     }
   }, []);
+
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      alert('Tu navegador no soporta geolocalización.');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const pos = { lat, lng };
+
+        setMapCenter(pos);
+        setMarkerPos(pos);
+        setMapZoom(17);
+
+        if (window.google && window.google.maps) {
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ location: pos }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              setFormData((prev) => ({ ...prev, address: results[0].formatted_address }));
+              setFormErrors((prev) => ({ ...prev, address: false }));
+            }
+            setIsLocating(false);
+          });
+        } else {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        alert('No pudimos obtener tu ubicación. Asegurate de darle permisos al navegador.');
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
 
   function buildMessage() {
     const lines = [];
@@ -235,7 +275,33 @@ export default function CartDrawer() {
 
               {/* Domicilio con Autocomplete */}
               <div>
-                <label className="block text-sm font-medium mb-1">Domicilio*:</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium">Domicilio*:</label>
+                  <button
+                    type="button"
+                    onClick={handleLocateMe}
+                    disabled={isLocating || !isLoaded}
+                    className="flex items-center gap-1 text-xs text-moss-700 hover:text-moss-800 font-medium disabled:opacity-50 transition-opacity"
+                  >
+                    {isLocating ? (
+                      <>
+                        <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        Ubicando...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        Usar mi ubicación
+                      </>
+                    )}
+                  </button>
+                </div>
                 {isLoaded ? (
                   <Autocomplete
                     onLoad={onAutocompleteLoad}
