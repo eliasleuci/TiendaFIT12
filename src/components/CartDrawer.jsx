@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useCart } from '../context/CartContext';
 import { WHATSAPP_NUMBER, STORE_NAME } from '../lib/config';
+import { formatWeight } from '../lib/utils';
 import {
   GoogleMap,
   useJsApiLoader,
@@ -143,8 +144,9 @@ export default function CartDrawer() {
     lines.push('');
     lines.push(`🛒 Mi pedido:`);
     items.forEach((i) => {
+      const qtyStr = i.isWeighable ? formatWeight(i.qty) : `${i.qty}`;
       lines.push(
-        `• ${i.qty}${i.isWeighable ? ' kg' : ''} x ${i.name}${i.code ? ` (#${i.code})` : ''} — ${currency.format(i.price * i.qty)}`
+        `• ${qtyStr} x ${i.name}${i.code ? ` (#${i.code})` : ''} — ${currency.format(i.price * i.qty)}`
       );
     });
     lines.push('');
@@ -204,8 +206,8 @@ export default function CartDrawer() {
                     <p className="font-mono text-xs text-ink/50 mt-0.5">{currency.format(item.price)} c/u</p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
-                        onClick={() => updateQty(item.id, item.qty - 1)}
-                        className="w-7 h-7 flex items-center justify-center rounded-full border border-ink/20 text-ink hover:border-moss-600"
+                        onClick={() => updateQty(item.id, Math.max(item.isWeighable ? 0.25 : 1, item.qty - (item.isWeighable ? 0.25 : 1)))}
+                        className="w-7 h-7 flex items-center justify-center rounded-full border border-ink/20 text-ink hover:border-moss-600 shrink-0"
                       >
                         −
                       </button>
@@ -213,11 +215,11 @@ export default function CartDrawer() {
                         <div className="flex items-center">
                           <input
                             type="number"
-                            step="1"
-                            min="1"
+                            step="0.25"
+                            min="0.25"
                             value={item.qty}
                             onChange={(e) => {
-                              const val = parseInt(e.target.value, 10);
+                              const val = parseFloat(e.target.value);
                               if (!isNaN(val)) updateQty(item.id, val);
                             }}
                             className="font-mono text-sm w-12 text-center bg-transparent border-b border-ink/20 focus:outline-none focus:border-moss-600 appearance-none"
@@ -228,8 +230,8 @@ export default function CartDrawer() {
                         <span className="font-mono text-sm w-6 text-center">{item.qty}</span>
                       )}
                       <button
-                        onClick={() => updateQty(item.id, item.qty + 1)}
-                        className="w-7 h-7 flex items-center justify-center rounded-full border border-ink/20 text-ink hover:border-moss-600"
+                        onClick={() => updateQty(item.id, item.qty + (item.isWeighable ? 0.25 : 1))}
+                        className="w-7 h-7 flex items-center justify-center rounded-full border border-ink/20 text-ink hover:border-moss-600 shrink-0"
                       >
                         +
                       </button>
