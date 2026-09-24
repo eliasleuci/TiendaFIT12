@@ -1,4 +1,6 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { useCart } from '../context/CartContext';
+import { checkIsWeighable } from '../lib/utils';
 
 const SLIDES = [
   {
@@ -38,10 +40,32 @@ const SLIDES = [
   },
 ];
 
+const currency = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  minimumFractionDigits: 2,
+});
+
 const INTERVAL_MS = 5000;
 const TRANSITION_MS = 800;
 
-export default function HeroSlider() {
+export default function HeroSlider({ featuredProducts = [] }) {
+  const { addItem } = useCart();
+
+  // Featured products (set from the admin) replace the default slides;
+  // the defaults are only a fallback when nothing is featured
+  const slides = useMemo(() => {
+    const productSlides = featuredProducts
+      .filter((p) => p.image_url)
+      .map((p) => ({
+        src: p.image_url,
+        label: p.featured_title || p.name,
+        sub: p.featured_subtitle || p.description || '',
+        product: p,
+      }));
+    return productSlides.length > 0 ? productSlides : SLIDES;
+  }, [featuredProducts]);
+
   const [current, setCurrent] = useState(0);
   const [prev, setPrev] = useState(null);
 
@@ -50,6 +74,15 @@ export default function HeroSlider() {
   const animatingRef = useRef(false);
   const timerRef = useRef(null);
   const pausedRef = useRef(false);
+  const lengthRef = useRef(slides.length);
+
+  useEffect(() => {
+    lengthRef.current = slides.length;
+    // Featured products load async: restart from the first slide when the list changes
+    currentRef.current = 0;
+    setCurrent(0);
+    setPrev(null);
+  }, [slides.length]);
 
   const goTo = useCallback((index) => {
     if (animatingRef.current) return;
@@ -72,7 +105,7 @@ export default function HeroSlider() {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       if (pausedRef.current) return;
-      const next = (currentRef.current + 1) % SLIDES.length;
+      const next = (currentRef.current + 1) % lengthRef.current;
       goTo(next);
     }, INTERVAL_MS);
   }, [goTo]);
@@ -84,10 +117,10 @@ export default function HeroSlider() {
   }, [startTimer]);
 
   const handlePrev = () => {
-    goTo((currentRef.current - 1 + SLIDES.length) % SLIDES.length);
+    goTo((currentRef.current - 1 + lengthRef.current) % lengthRef.current);
   };
   const handleNext = () => {
-    goTo((currentRef.current + 1) % SLIDES.length);
+    goTo((currentRef.current + 1) % lengthRef.current);
   };
 
   return (
@@ -97,7 +130,7 @@ export default function HeroSlider() {
       onMouseEnter={() => { pausedRef.current = true; }}
       onMouseLeave={() => { pausedRef.current = false; }}
     >
-      {SLIDES.map((slide, i) => {
+      {slides.map((slide, i) => {
         const isActive = i === current;
         const isPrev = i === prev;
 
@@ -133,7 +166,7 @@ export default function HeroSlider() {
 
             {/* Bottom gradient for text */}
             {slide.label && (
-              <div className="absolute inset-x-0 bottom-0 z-20 h-40 bg-gradient-to-t from-black/65 via-black/15 to-transparent pointer-events-none" />
+              <div className={`absolute inset-x-0 bottom-0 z-20 ${slide.product ? 'h-56' : 'h-40'} bg-gradient-to-t from-black/65 via-black/15 to-transparent pointer-events-none`} />
             )}
 
             {/* Text */}
@@ -150,9 +183,26 @@ export default function HeroSlider() {
                     {slide.label}
                   </h2>
                   {slide.sub && (
-                    <p className="mt-1.5 text-white/80 text-sm sm:text-base font-medium drop-shadow-md max-w-xl">
+                    <p className="mt-1.5 text-white/80 text-sm sm:text-base font-medium drop-shadow-md max-w-xl line-clamp-2">
                       {slide.sub}
                     </p>
+                  )}
+                  {slide.product && (
+                    <div className="mt-3 flex items-center gap-3">
+                      <span className="font-mono text-lg sm:text-2xl font-bold text-turmeric-400 drop-shadow-md">
+                        {currency.format(slide.product.price)}
+                        {checkIsWeighable(slide.product) && (
+                          <span className="ml-1 text-xs text-white/70 font-medium">/ kg</span>
+                        )}
+                      </span>
+                      <button
+                        onClick={() => addItem(slide.product, 1)}
+                        tabIndex={isActive ? 0 : -1}
+                        className="rounded-full bg-turmeric-400 text-moss-900 text-xs sm:text-sm font-semibold px-4 py-2 hover:bg-turmeric-500 active:scale-95 transition-all shadow-lg"
+                      >
+                        + Agregar
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -185,7 +235,7 @@ export default function HeroSlider() {
 
       {/* Dot indicators */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-40 flex gap-1.5 items-center">
-        {SLIDES.map((_, i) => (
+        {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => goTo(i)}
@@ -203,7 +253,7 @@ export default function HeroSlider() {
 
       {/* Counter */}
       <div className="absolute top-3 right-4 z-40 text-white/60 text-xs font-mono bg-black/20 backdrop-blur-sm px-2 py-0.5 rounded-full select-none">
-        {current + 1} / {SLIDES.length}
+        {current + 1} / {slides.length}
       </div>
     </div>
   );

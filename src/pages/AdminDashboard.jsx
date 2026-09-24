@@ -157,6 +157,11 @@ function ProductsSection({ categories, products, loading, reload }) {
     reload();
   }
 
+  async function toggleFeatured(product) {
+    await supabase.from('products').update({ featured: !product.featured }).eq('id', product.id);
+    reload();
+  }
+
   async function deleteProduct(product) {
     if (!confirm(`¿Eliminar "${product.name}"?`)) return;
     await supabase.from('products').delete().eq('id', product.id);
@@ -229,6 +234,7 @@ function ProductsSection({ categories, products, loading, reload }) {
                 <th className="px-4 py-3">Categoría</th>
                 <th className="px-4 py-3 text-right">Precio</th>
                 <th className="px-4 py-3 text-center">Visible</th>
+                <th className="px-4 py-3 text-center">Destacado</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -260,6 +266,15 @@ function ProductsSection({ categories, products, loading, reload }) {
                       <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${p.active ? 'translate-x-4' : ''}`} />
                     </button>
                   </td>
+                  <td className="px-4 py-2 text-center">
+                    <button
+                      onClick={() => toggleFeatured(p)}
+                      title={p.featured ? 'Quitar del slider' : 'Destacar en el slider'}
+                      className={`text-lg leading-none transition-colors ${p.featured ? 'text-turmeric-500' : 'text-ink/20 hover:text-turmeric-400'}`}
+                    >
+                      {p.featured ? '★' : '☆'}
+                    </button>
+                  </td>
                   <td className="px-4 py-2 text-right whitespace-nowrap">
                     <button onClick={() => setEditingProduct(p)} className="text-xs text-moss-700 hover:underline mr-3 font-medium">
                       Editar
@@ -272,7 +287,7 @@ function ProductsSection({ categories, products, loading, reload }) {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-ink/40">
+                  <td colSpan={8} className="px-4 py-12 text-center text-ink/40">
                     Sin productos que coincidan.
                   </td>
                 </tr>

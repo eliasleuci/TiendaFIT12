@@ -29,6 +29,8 @@ export default function Store() {
     });
   }, [products, search, activeCategory]);
 
+  const featured = useMemo(() => products.filter((p) => p.featured), [products]);
+
   const grouped = useMemo(() => {
     return categories
       .map((cat) => ({
@@ -45,7 +47,7 @@ export default function Store() {
         onSearchChange={setSearch}
         onAISearch={() => setAiSearchOpen(true)}
       />
-      <HeroSlider />
+      <HeroSlider featuredProducts={featured} />
 
       {/* Info Banner - Without Emojis */}
       <div className="bg-moss-700 text-paper border-b border-moss-900/50">

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
-const empty = { code: '', name: '', description: '', price: '', category_id: '', active: true, image_url: '' };
+const empty = { code: '', name: '', description: '', price: '', category_id: '', active: true, image_url: '', featured: false, featured_title: '', featured_subtitle: '' };
 
 export default function ProductForm({ categories, product, onClose, onSaved }) {
   const [form, setForm] = useState(
@@ -14,6 +14,9 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
           category_id: product.category_id || '',
           active: product.active,
           image_url: product.image_url || '',
+          featured: !!product.featured,
+          featured_title: product.featured_title || '',
+          featured_subtitle: product.featured_subtitle || '',
         }
       : { ...empty, category_id: categories[0]?.id || '' }
   );
@@ -74,6 +77,9 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
       price: Number(form.price),
       category_id: form.category_id,
       active: form.active,
+      featured: form.featured,
+      featured_title: form.featured_title.trim() || null,
+      featured_subtitle: form.featured_subtitle.trim() || null,
     };
 
     if (product) {
@@ -226,6 +232,39 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
             {form.active ? 'Visible en la tienda' : 'Oculto'}
           </span>
         </label>
+
+        <div className="mt-4 rounded-lg border border-turmeric-400/40 bg-turmeric-400/5 p-3">
+          <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+            <div
+              onClick={() => update('featured', !form.featured)}
+              className={`relative w-10 h-6 rounded-full transition-colors ${form.featured ? 'bg-turmeric-500' : 'bg-ink/20'}`}
+            >
+              <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.featured ? 'translate-x-4' : ''}`} />
+            </div>
+            <span className={form.featured ? 'text-ink font-medium' : 'text-ink/50'}>
+              ★ Destacar en el slider principal
+            </span>
+          </label>
+          {form.featured && (
+            <div className="mt-3 space-y-2">
+              {!imagePreview && (
+                <p className="text-xs text-paprika-500">Necesita una foto para aparecer en el slider.</p>
+              )}
+              <input
+                value={form.featured_title}
+                onChange={(e) => update('featured_title', e.target.value)}
+                placeholder={`Título (por defecto: ${form.name || 'nombre del producto'})`}
+                className="w-full rounded-md border border-ink/20 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-moss-500"
+              />
+              <input
+                value={form.featured_subtitle}
+                onChange={(e) => update('featured_subtitle', e.target.value)}
+                placeholder="Subtítulo (por defecto: la descripción)"
+                className="w-full rounded-md border border-ink/20 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-moss-500"
+              />
+            </div>
+          )}
+        </div>
 
         {error && <p className="text-paprika-500 text-sm mt-3 bg-paprika-50 px-3 py-2 rounded-md">{error}</p>}
 
