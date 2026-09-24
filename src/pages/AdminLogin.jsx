@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { STORE_NAME } from '../lib/config';
@@ -12,13 +12,18 @@ const DEMO_USER = 'admin@fit12.com';
 const DEMO_PASS = 'fit12demo';
 
 export default function AdminLogin() {
-  const { signIn } = useAuth();
+  const { signIn, session } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState(IS_DEMO ? DEMO_USER : '');
   const [password, setPassword] = useState(IS_DEMO ? DEMO_PASS : '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+
+  // Si ya hay sesión (p. ej. volviendo atrás desde el panel), ir directo al admin
+  useEffect(() => {
+    if (session) navigate('/admin', { replace: true });
+  }, [session, navigate]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -28,7 +33,7 @@ export default function AdminLogin() {
     // Modo demo: credenciales provisorias permiten entrar directamente
     if (IS_DEMO) {
       if (email === DEMO_USER && password === DEMO_PASS) {
-        navigate('/admin');
+        navigate('/admin', { replace: true });
         return;
       }
       setLoading(false);
@@ -41,7 +46,7 @@ export default function AdminLogin() {
     if (err) {
       setError('Email o contraseña incorrectos.');
     } else {
-      navigate('/admin');
+      navigate('/admin', { replace: true });
     }
   }
 

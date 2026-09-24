@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import ProductForm from '../components/admin/ProductForm';
@@ -168,12 +169,12 @@ function ProductsSection({ categories, products, loading, reload }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h2 className="font-display text-2xl font-semibold text-ink">Productos</h2>
           <p className="text-sm text-ink/50 mt-0.5">{products.length} productos en total</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setShowBulkPrice(true)}
             className="flex items-center gap-1.5 rounded-full border border-ink/20 px-4 py-2 text-sm hover:border-moss-500 text-ink transition-colors"
@@ -304,7 +305,15 @@ function ProductsSection({ categories, products, loading, reload }) {
 export default function AdminDashboard() {
   const { signOut } = useAuth();
   const { categories, products, loading, reload } = useAllProducts();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // La sección activa vive en la URL para que el botón "atrás" navegue entre secciones
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab = NAV.some((n) => n.id === tabParam) ? tabParam : 'dashboard';
+  function setActiveTab(tab) {
+    if (tab === activeTab) return;
+    setSearchParams(tab === 'dashboard' ? {} : { tab });
+    window.scrollTo(0, 0);
+  }
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showNewProduct, setShowNewProduct] = useState(false);
   const [showBulkPrice, setShowBulkPrice] = useState(false);
@@ -376,7 +385,7 @@ export default function AdminDashboard() {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
           {activeTab === 'dashboard' && (
             <DashboardHome
               products={products}
