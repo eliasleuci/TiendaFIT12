@@ -210,6 +210,9 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
               onChange={(e) => update('price', e.target.value)}
               className="w-full rounded-md border border-ink/20 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-moss-500"
             />
+            {product?.facturador_id && (
+              <p className="mt-1 text-[11px] text-moss-600">🔗 Se actualiza desde el facturador</p>
+            )}
           </div>
         </div>
 

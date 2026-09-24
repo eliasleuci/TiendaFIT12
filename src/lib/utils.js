@@ -37,3 +37,8 @@ export function parseArsAmount(text) {
   }
   return /^\d+(\.\d+)?$/.test(normalized) ? Number(normalized) : NaN;
 }
+
+// Store price for a product linked to the facturador (also used by the Netlify sync function)
+export function facturadorPrice(sellPrice, factor = 1) {
+  return Math.round(Number(sellPrice) * Number(factor || 1) * 100) / 100;
+}
