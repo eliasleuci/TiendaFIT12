@@ -3,6 +3,7 @@ import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import RequireAuth from './components/RequireAuth';
 import Store from './pages/Store';
+import Wholesale from './pages/Wholesale';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 
@@ -13,6 +14,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Store />} />
+            <Route path="/mayorista" element={<Wholesale />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin"

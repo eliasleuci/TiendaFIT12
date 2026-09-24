@@ -6,6 +6,7 @@ import ProductForm from '../components/admin/ProductForm';
 import CategoryManager from '../components/admin/CategoryManager';
 import PromotionManager from '../components/admin/PromotionManager';
 import BulkPriceModal from '../components/admin/BulkPriceModal';
+import WholesaleManager from '../components/admin/WholesaleManager';
 import { STORE_NAME } from '../lib/config';
 
 const currency = new Intl.NumberFormat('es-AR', {
@@ -41,6 +42,13 @@ const NAV = [
     id: 'promotions', label: 'Promociones', icon: (
       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <path d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'wholesale', label: 'Mayoristas', icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
       </svg>
     ),
   },
@@ -108,6 +116,12 @@ function DashboardHome({ products, categories, onTab, onNewProduct, onBulkPrice 
             icon: '🏷️',
             desc: 'Añadir una oferta o descuento',
             action: () => onTab('promotions'),
+          },
+          {
+            label: 'Clientes mayoristas',
+            icon: '🤝',
+            desc: 'Clientes, categorías y precios por mayor',
+            action: () => onTab('wholesale'),
           },
           {
             label: 'Ver tienda',
@@ -257,6 +271,11 @@ function ProductsSection({ categories, products, loading, reload }) {
                   <td className="px-4 py-2 text-ink/60 text-xs">{categoryName(p.category_id)}</td>
                   <td className="px-4 py-2 text-right font-mono font-semibold text-paprika-500">
                     {currency.format(p.price)}
+                    {p.wholesale_price != null && (
+                      <div className="text-[11px] font-medium text-moss-600" title="Precio mayorista">
+                        May. {currency.format(p.wholesale_price)}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-2 text-center">
                     <button
@@ -427,6 +446,9 @@ export default function AdminDashboard() {
             </div>
           )}
           {activeTab === 'promotions' && <PromotionManager />}
+          {activeTab === 'wholesale' && (
+            <WholesaleManager categories={categories} products={products} reload={reload} />
+          )}
         </main>
       </div>
 
@@ -468,12 +490,15 @@ function useAllProducts() {
       setLoading(false);
       return;
     }
-    const [{ data: cats }, { data: prods }] = await Promise.all([
+    const [{ data: cats }, { data: prods }, { data: wholesalePrices }] = await Promise.all([
       supabase.from('categories').select('*').order('sort_order', { ascending: true }),
       supabase.from('products').select('*').order('name', { ascending: true }),
+      supabase.from('wholesale_prices').select('product_id, price'),
     ]);
+    // Wholesale prices live in a private table; merge them in for the admin views
+    const wholesaleById = new Map((wholesalePrices || []).map((w) => [w.product_id, w.price]));
     setCategories(cats || []);
-    setProducts(prods || []);
+    setProducts((prods || []).map((p) => ({ ...p, wholesale_price: wholesaleById.get(p.id) ?? null })));
     setLoading(false);
   }
 

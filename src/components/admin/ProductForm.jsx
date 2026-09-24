@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
-const empty = { code: '', name: '', description: '', price: '', category_id: '', active: true, image_url: '', featured: false, featured_title: '', featured_subtitle: '' };
+const empty = { code: '', name: '', description: '', price: '', category_id: '', active: true, image_url: '', featured: false, featured_title: '', featured_subtitle: '', wholesale_price: '' };
 
 export default function ProductForm({ categories, product, onClose, onSaved }) {
   const [form, setForm] = useState(
@@ -17,6 +17,7 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
           featured: !!product.featured,
           featured_title: product.featured_title || '',
           featured_subtitle: product.featured_subtitle || '',
+          wholesale_price: product.wholesale_price ?? '',
         }
       : { ...empty, category_id: categories[0]?.id || '' }
   );
@@ -60,6 +61,16 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
     return data.publicUrl;
   }
 
+  // Wholesale prices live in their own table (private, not readable by the public store)
+  async function saveWholesalePrice(productId) {
+    if (form.wholesale_price === '' || form.wholesale_price === null) {
+      return supabase.from('wholesale_prices').delete().eq('product_id', productId);
+    }
+    return supabase
+      .from('wholesale_prices')
+      .upsert({ product_id: productId, price: Number(form.wholesale_price), updated_at: new Date().toISOString() });
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.name.trim() || form.price === '' || !form.category_id) {
@@ -89,8 +100,10 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
         .from('products')
         .update({ ...payload, image_url: imageUrl })
         .eq('id', product.id);
+      if (saveError) { setSaving(false); setError(saveError.message); return; }
+      const { error: wholesaleError } = await saveWholesalePrice(product.id);
       setSaving(false);
-      if (saveError) { setError(saveError.message); return; }
+      if (wholesaleError) { setError(`Precio mayorista: ${wholesaleError.message}`); return; }
     } else {
       // New: insert then upload
       const { data: inserted, error: insertError } = await supabase
@@ -103,7 +116,10 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
       if (imageUrl) {
         await supabase.from('products').update({ image_url: imageUrl }).eq('id', inserted.id);
       }
+      const { error: wholesaleError } = await saveWholesalePrice(inserted.id);
       setSaving(false);
+      // The product already exists at this point, so don't keep the form open (a retry would duplicate it)
+      if (wholesaleError) alert(`El producto se creó, pero no se pudo guardar el precio mayorista: ${wholesaleError.message}`);
     }
 
     onSaved();
@@ -186,6 +202,19 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
               className="w-full rounded-md border border-ink/20 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-moss-500"
             />
           </div>
+        </div>
+
+        <div className="mt-3">
+          <label className="block text-xs font-medium text-ink/70 mb-1">Precio mayorista (ARS)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.wholesale_price}
+            onChange={(e) => update('wholesale_price', e.target.value)}
+            placeholder="Vacío = no se muestra a mayoristas"
+            className="w-full rounded-md border border-ink/20 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-moss-500"
+          />
         </div>
 
         <div className="mt-3">

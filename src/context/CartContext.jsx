@@ -4,10 +4,11 @@ import { checkIsWeighable } from '../lib/utils';
 const CartContext = createContext(null);
 const STORAGE_KEY = 'fit12_cart_v1';
 
-export function CartProvider({ children }) {
+// storageKey lets the wholesale section keep its own cart, separate from the retail one
+export function CartProvider({ children, storageKey = STORAGE_KEY }) {
   const [items, setItems] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(storageKey);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -16,8 +17,8 @@ export function CartProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    localStorage.setItem(storageKey, JSON.stringify(items));
+  }, [items, storageKey]);
 
   function addItem(product, qty = 1) {
     setItems((prev) => {

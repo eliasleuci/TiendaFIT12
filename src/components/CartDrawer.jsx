@@ -41,12 +41,14 @@ const mapOptions = {
   ],
 };
 
-export default function CartDrawer() {
+// wholesale: { name, dni, minOrder } when used inside the wholesale section
+export default function CartDrawer({ wholesale }) {
   const { items, updateQty, removeItem, total, isOpen, setIsOpen, clearCart } = useCart();
+  const missingForMin = wholesale ? Math.max(0, (wholesale.minOrder || 0) - total) : 0;
 
   const [step, setStep] = useState('CART'); // 'CART' | 'CHECKOUT'
   const [formData, setFormData] = useState({
-    name: '',
+    name: wholesale?.name || '',
     address: '',
     crossStreets: '',
     comments: '',
@@ -135,9 +137,16 @@ export default function CartDrawer() {
 
   function buildMessage() {
     const lines = [];
-    lines.push(`Hola ${STORE_NAME}! Quiero hacer este pedido:`);
-    lines.push('');
-    lines.push(`👤 Cliente: ${formData.name.trim()}`);
+    if (wholesale) {
+      lines.push(`Hola ${STORE_NAME}! Quiero hacer este PEDIDO MAYORISTA:`);
+      lines.push('');
+      lines.push(`👤 Cliente: ${formData.name.trim()}`);
+      lines.push(`🪪 DNI: ${wholesale.dni}`);
+    } else {
+      lines.push(`Hola ${STORE_NAME}! Quiero hacer este pedido:`);
+      lines.push('');
+      lines.push(`👤 Cliente: ${formData.name.trim()}`);
+    }
     lines.push(`📍 Domicilio: ${formData.address.trim()}`);
     if (formData.crossStreets.trim()) lines.push(`🗺️ Entre calles: ${formData.crossStreets.trim()}`);
     if (formData.comments.trim()) lines.push(`💬 Comentario: ${formData.comments.trim()}`);
@@ -155,6 +164,7 @@ export default function CartDrawer() {
   }
 
   function handleCheckout() {
+    if (missingForMin > 0) return;
     const errors = {};
     if (!formData.name.trim()) errors.name = true;
     if (!formData.address.trim()) errors.address = true;
@@ -186,7 +196,7 @@ export default function CartDrawer() {
         }`}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-ink/10 bg-moss-700 text-paper">
-          <h2 className="font-display text-xl font-semibold">Tu pedido</h2>
+          <h2 className="font-display text-xl font-semibold">{wholesale ? 'Tu pedido mayorista' : 'Tu pedido'}</h2>
           <button onClick={() => setIsOpen(false)} className="text-paper/80 hover:text-paper text-sm">
             Cerrar
           </button>
@@ -421,9 +431,16 @@ export default function CartDrawer() {
                   <span>Total</span>
                   <span className="font-mono text-paprika-500">{currency.format(total)}</span>
                 </div>
+                {missingForMin > 0 && (
+                  <p className="text-xs text-paprika-500 bg-paprika-500/10 rounded px-3 py-2 text-center">
+                    El pedido mínimo mayorista es de {currency.format(wholesale.minOrder)}.
+                    Te faltan <strong>{currency.format(missingForMin)}</strong>.
+                  </p>
+                )}
                 <button
                   onClick={() => setStep('CHECKOUT')}
-                  className="w-full rounded bg-turmeric-400 text-moss-900 font-semibold py-3 hover:bg-turmeric-500 transition-colors"
+                  disabled={missingForMin > 0}
+                  className="w-full rounded bg-turmeric-400 text-moss-900 font-semibold py-3 hover:bg-turmeric-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-turmeric-400"
                 >
                   Continuar compra
                 </button>

@@ -59,6 +59,12 @@ export default function ProductCard({ product }) {
 
         <div className="mt-4 flex items-center justify-between gap-2">
           <div className="flex flex-col">
+            {/* Wholesale section: show the regular price as reference */}
+            {product.retail_price > product.price && (
+              <span className="font-mono text-[11px] text-ink/40 line-through">
+                {currency.format(product.retail_price)}
+              </span>
+            )}
             <span className="font-mono text-base font-bold text-paprika-500">
               {currency.format(product.price)}
             </span>
