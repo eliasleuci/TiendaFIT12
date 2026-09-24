@@ -56,7 +56,7 @@ export default function Store() {
           <span>Frutos secos • Suplementos • Aceites</span>
           <span>Especies y Condimentos</span>
           <span>Envíos sin cargo</span>
-          <span>Córdoba</span>
+          <span>Córdoba Capital</span>
         </div>
       </div>
 
