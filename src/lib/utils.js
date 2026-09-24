@@ -20,3 +20,20 @@ export function formatWeight(qty) {
   // For cases like 1.5 kg, 1.25 kg
   return `${qty} kg`;
 }
+
+// Parses an amount typed the Argentine way: "300.000" → 300000, "8.910,50" → 8910.5.
+// A single dot followed by 1-2 digits ("15.5") is taken as a decimal point.
+// Returns null for empty input and NaN for anything unparseable.
+export function parseArsAmount(text) {
+  const raw = String(text ?? '').replace(/[$\s]/g, '');
+  if (raw === '') return null;
+  let normalized;
+  if (raw.includes(',')) {
+    normalized = raw.replace(/\./g, '').replace(',', '.');
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(raw)) {
+    normalized = raw.replace(/\./g, '');
+  } else {
+    normalized = raw;
+  }
+  return /^\d+(\.\d+)?$/.test(normalized) ? Number(normalized) : NaN;
+}

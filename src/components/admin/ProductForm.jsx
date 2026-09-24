@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { parseArsAmount } from '../../lib/utils';
 
 const empty = { code: '', name: '', description: '', price: '', category_id: '', active: true, image_url: '', featured: false, featured_title: '', featured_subtitle: '', wholesale_price: '' };
 
@@ -17,7 +18,9 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
           featured: !!product.featured,
           featured_title: product.featured_title || '',
           featured_subtitle: product.featured_subtitle || '',
-          wholesale_price: product.wholesale_price ?? '',
+          wholesale_price: product.wholesale_price != null
+            ? Number(product.wholesale_price).toLocaleString('es-AR', { maximumFractionDigits: 2 })
+            : '',
         }
       : { ...empty, category_id: categories[0]?.id || '' }
   );
@@ -63,18 +66,24 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
 
   // Wholesale prices live in their own table (private, not readable by the public store)
   async function saveWholesalePrice(productId) {
-    if (form.wholesale_price === '' || form.wholesale_price === null) {
+    const price = parseArsAmount(form.wholesale_price);
+    if (price === null) {
       return supabase.from('wholesale_prices').delete().eq('product_id', productId);
     }
     return supabase
       .from('wholesale_prices')
-      .upsert({ product_id: productId, price: Number(form.wholesale_price), updated_at: new Date().toISOString() });
+      .upsert({ product_id: productId, price, updated_at: new Date().toISOString() });
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.name.trim() || form.price === '' || !form.category_id) {
       setError('Completá al menos nombre, precio y categoría.');
+      return;
+    }
+    const wholesalePrice = parseArsAmount(form.wholesale_price);
+    if (wholesalePrice !== null && (Number.isNaN(wholesalePrice) || wholesalePrice < 0)) {
+      setError('Precio mayorista inválido. Ejemplo: 8.910 o 8.910,50');
       return;
     }
     setSaving(true);
@@ -207,9 +216,7 @@ export default function ProductForm({ categories, product, onClose, onSaved }) {
         <div className="mt-3">
           <label className="block text-xs font-medium text-ink/70 mb-1">Precio mayorista (ARS)</label>
           <input
-            type="number"
-            step="0.01"
-            min="0"
+            inputMode="decimal"
             value={form.wholesale_price}
             onChange={(e) => update('wholesale_price', e.target.value)}
             placeholder="Vacío = no se muestra a mayoristas"

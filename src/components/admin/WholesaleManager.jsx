@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { normalizeDni } from '../../lib/wholesale';
+import { parseArsAmount } from '../../lib/utils';
 import WholesaleCatalog from './WholesaleCatalog';
 
 const emptyForm = { dni: '', name: '', phone: '' };
+
+const currency = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 });
 
 const TABS = [
   { id: 'catalog', label: 'Catálogo y precios' },
@@ -64,7 +67,7 @@ function ClientsPanel() {
     if (clientsError) setError(`No se pudieron cargar los clientes: ${clientsError.message}`);
     setClients(rows || []);
     if (settings) {
-      setMinOrder(String(Number(settings.min_order) || ''));
+      setMinOrder(Number(settings.min_order) ? currency.format(Number(settings.min_order)).replace(/[$\s]/g, '') : '');
       setSavedMinOrder(Number(settings.min_order) || 0);
     }
     setLoading(false);
@@ -79,7 +82,9 @@ function ClientsPanel() {
   }, [clients, search]);
 
   async function saveMinOrder() {
-    const value = Number(minOrder) || 0;
+    const value = parseArsAmount(minOrder) ?? 0;
+    if (Number.isNaN(value) || value < 0) { setError('Monto mínimo inválido. Ejemplo: 300.000'); return; }
+    setError('');
     const { error: saveError } = await supabase.from('wholesale_settings').upsert({ id: 1, min_order: value });
     if (saveError) { setError(saveError.message); return; }
     setSavedMinOrder(value);
@@ -153,23 +158,26 @@ function ClientsPanel() {
             <label className="block text-xs font-medium text-ink/70 mb-1">Pedido mínimo mayorista (ARS)</label>
             <div className="flex gap-2">
               <input
-                type="number"
-                min="0"
-                step="1"
+                inputMode="decimal"
                 value={minOrder}
                 onChange={(e) => setMinOrder(e.target.value)}
-                placeholder="0 = sin mínimo"
+                placeholder="Ej: 300.000 (vacío = sin mínimo)"
                 className={inputClass}
               />
               <button
                 type="button"
                 onClick={saveMinOrder}
-                disabled={(Number(minOrder) || 0) === savedMinOrder}
+                disabled={(parseArsAmount(minOrder) ?? 0) === savedMinOrder}
                 className="rounded-full bg-moss-700 text-paper text-sm font-medium px-4 hover:bg-moss-600 disabled:opacity-40 transition-colors shrink-0"
               >
                 Guardar
               </button>
             </div>
+            {savedMinOrder !== null && (
+              <p className="mt-1 text-xs text-ink/50">
+                Mínimo actual: <strong className="text-ink">{savedMinOrder > 0 ? currency.format(savedMinOrder) : 'sin mínimo'}</strong>
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-medium text-ink/70 mb-1">Link para tus clientes</label>

@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { parseArsAmount } from '../../lib/utils';
 
 const currency = new Intl.NumberFormat('es-AR', {
   style: 'currency',
   currency: 'ARS',
   minimumFractionDigits: 0,
 });
+
+// Same Argentine format the inputs accept: 8910.5 → "8.910,5"
+function formatAmount(value) {
+  return Number(value).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+}
 
 // Which categories the wholesale section shows, and each product's wholesale price.
 // A product reaches wholesale clients when its category is enabled AND it has a wholesale price.
@@ -75,9 +81,9 @@ export default function WholesaleCatalog({ categories, products, reload }) {
   async function savePrice(product) {
     const raw = drafts[product.id];
     if (raw === undefined) return;
-    const value = raw.trim() === '' ? null : Number(raw);
+    const value = parseArsAmount(raw);
     if (value !== null && (Number.isNaN(value) || value < 0)) {
-      setError(`Precio inválido para "${product.name}".`);
+      setError(`Precio inválido para "${product.name}". Ejemplo: 8.910 o 8.910,50`);
       return;
     }
     if (value === (product.wholesale_price == null ? null : Number(product.wholesale_price))) {
@@ -257,7 +263,7 @@ export default function WholesaleCatalog({ categories, products, reload }) {
                   <tbody>
                     {catProducts.map((p) => {
                       const draft = drafts[p.id];
-                      const shown = draft ?? (p.wholesale_price != null ? String(Number(p.wholesale_price)) : '');
+                      const shown = draft ?? (p.wholesale_price != null ? formatAmount(p.wholesale_price) : '');
                       const wholesale = p.wholesale_price != null ? Number(p.wholesale_price) : null;
                       const diff = wholesale != null && Number(p.price) > 0
                         ? Math.round((1 - wholesale / Number(p.price)) * 100)
@@ -276,9 +282,7 @@ export default function WholesaleCatalog({ categories, products, reload }) {
                           </td>
                           <td className="px-4 py-2 text-right">
                             <input
-                              type="number"
-                              min="0"
-                              step="0.01"
+                              inputMode="decimal"
                               value={shown}
                               placeholder="Sin precio"
                               disabled={savingIds.has(p.id)}
