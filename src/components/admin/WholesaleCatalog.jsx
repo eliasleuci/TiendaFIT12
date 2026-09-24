@@ -159,9 +159,44 @@ export default function WholesaleCatalog({ categories, products, reload }) {
 
       {error && <p className="text-paprika-500 text-sm mb-4 bg-paprika-500/10 px-3 py-2 rounded-md">{error}</p>}
 
+      {/* Categories — mobile: picker + switch for the selected one */}
+      {!loadingCats && currentCat && (
+        <div className="lg:hidden rounded-xl border border-ink/10 bg-white/60 p-3 mb-4">
+          <label className="block text-xs uppercase tracking-wide text-ink/50 mb-1.5" htmlFor="wh-cat">Categoría</label>
+          <select
+            id="wh-cat"
+            value={currentCat}
+            onChange={(e) => { setSelectedCat(e.target.value); setSearch(''); }}
+            className="w-full rounded-md border border-ink/20 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-moss-600"
+          >
+            {categories.map((c) => {
+              const stats = statsByCat[c.id] || { total: 0, priced: 0 };
+              return (
+                <option key={c.id} value={c.id}>
+                  {enabledIds.has(c.id) ? '● ' : '○ '}{c.name} ({stats.priced}/{stats.total})
+                </option>
+              );
+            })}
+          </select>
+          <label className="mt-3 flex items-center gap-3 text-sm cursor-pointer select-none">
+            <button
+              type="button"
+              onClick={() => toggleCategory(currentCat)}
+              className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${currentEnabled ? 'bg-moss-600' : 'bg-ink/20'}`}
+              aria-label={currentEnabled ? 'Ocultar a mayoristas' : 'Mostrar a mayoristas'}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${currentEnabled ? 'translate-x-4' : ''}`} />
+            </button>
+            <span className={currentEnabled ? 'text-moss-700 font-medium' : 'text-ink/60'}>
+              {currentEnabled ? 'Visible para mayoristas' : 'Oculta para mayoristas'}
+            </span>
+          </label>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-4">
-        {/* Categories */}
-        <div className="lg:w-72 shrink-0 rounded-xl border border-ink/10 bg-white/60 overflow-hidden self-start w-full">
+        {/* Categories — desktop list */}
+        <div className="hidden lg:block lg:w-72 shrink-0 rounded-xl border border-ink/10 bg-white/60 overflow-hidden self-start w-full">
           <div className="px-4 py-3 border-b border-ink/10 text-xs uppercase tracking-wide text-ink/50">
             Categorías
           </div>
@@ -207,7 +242,7 @@ export default function WholesaleCatalog({ categories, products, reload }) {
           {currentCat && (
             <>
               <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <div>
+                <div className="hidden lg:block">
                   <h3 className="font-display text-lg font-semibold text-ink">{currentCatName}</h3>
                   <p className={`text-xs ${currentEnabled ? 'text-moss-600' : 'text-paprika-500'}`}>
                     {currentEnabled ? '✓ Visible para mayoristas' : 'Oculta para mayoristas — activala con el interruptor'}
@@ -217,7 +252,7 @@ export default function WholesaleCatalog({ categories, products, reload }) {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscar en la categoría..."
-                  className={`${inputClass} min-w-[200px]`}
+                  className={`${inputClass} w-full lg:w-auto lg:min-w-[200px]`}
                 />
               </div>
 
@@ -254,9 +289,9 @@ export default function WholesaleCatalog({ categories, products, reload }) {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-ink/50 text-xs uppercase tracking-wide border-b border-ink/10">
-                      <th className="px-4 py-3">Producto</th>
-                      <th className="px-4 py-3 text-right">Minorista</th>
-                      <th className="px-4 py-3 text-right">Mayorista</th>
+                      <th className="px-3 sm:px-4 py-3">Producto</th>
+                      <th className="px-4 py-3 text-right hidden sm:table-cell">Minorista</th>
+                      <th className="px-3 sm:px-4 py-3 text-right">Mayorista</th>
                       <th className="px-4 py-3 text-right hidden sm:table-cell">Dif.</th>
                     </tr>
                   </thead>
@@ -270,26 +305,31 @@ export default function WholesaleCatalog({ categories, products, reload }) {
                         : null;
                       return (
                         <tr key={p.id} className="border-b border-ink/5">
-                          <td className="px-4 py-2">
+                          <td className="px-3 sm:px-4 py-2">
                             <div className="font-medium text-ink">{p.name}</div>
                             <div className="text-[11px] text-ink/45">
                               {p.code ? `#${p.code}` : ''}
                               {!p.active && <span className="ml-1 text-paprika-500">· oculto en la tienda</span>}
                             </div>
+                            {/* Mobile: retail price + difference under the name */}
+                            <div className="sm:hidden text-[11px] text-ink/55 mt-0.5">
+                              Minorista <span className="font-mono">{currency.format(p.price)}</span>
+                              {diff != null && <> · {diff > 0 ? '-' : '+'}{Math.abs(diff)}%</>}
+                            </div>
                           </td>
-                          <td className="px-4 py-2 text-right font-mono text-ink/60 whitespace-nowrap">
+                          <td className="px-4 py-2 text-right font-mono text-ink/60 whitespace-nowrap hidden sm:table-cell">
                             {currency.format(p.price)}
                           </td>
-                          <td className="px-4 py-2 text-right">
+                          <td className="px-3 sm:px-4 py-2 text-right">
                             <input
                               inputMode="decimal"
                               value={shown}
-                              placeholder="Sin precio"
+                              placeholder="—"
                               disabled={savingIds.has(p.id)}
                               onChange={(e) => setDrafts((prev) => ({ ...prev, [p.id]: e.target.value }))}
                               onBlur={() => savePrice(p)}
                               onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                              className={`${inputClass} w-28 text-right font-mono disabled:opacity-50 ${
+                              className={`${inputClass} w-24 sm:w-28 text-right font-mono disabled:opacity-50 ${
                                 draft !== undefined ? 'border-turmeric-500' : ''
                               }`}
                             />

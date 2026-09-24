@@ -208,7 +208,7 @@ function ClientsPanel() {
             <input
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              placeholder="Teléfono (opcional)"
+              placeholder="Teléfono"
               className={inputClass}
             />
             <input
@@ -246,14 +246,44 @@ function ClientsPanel() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por nombre o DNI..."
-          className="rounded-lg border border-ink/20 px-3 py-2 text-sm bg-white min-w-[220px] focus:outline-none focus:ring-1 focus:ring-moss-600"
+          className="rounded-lg border border-ink/20 px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[220px] focus:outline-none focus:ring-1 focus:ring-moss-600"
         />
       </div>
+
+      {!loading && filtered.length === 0 && (
+        <div className="sm:hidden rounded-xl border border-ink/10 bg-white/60 px-4 py-12 text-center text-sm text-ink/40">
+          {clients.length === 0 ? 'Todavía no diste de alta ningún cliente mayorista.' : 'Sin clientes que coincidan.'}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-16 text-ink/40">Cargando clientes...</div>
       ) : (
-        <div className="overflow-x-auto bg-white/60 rounded-xl border border-ink/10">
+        <>
+        {/* Mobile: cards */}
+        <ul className="sm:hidden space-y-2">
+          {filtered.map((c) => (
+            <li key={c.id} className="rounded-xl border border-ink/10 bg-white/60 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-medium text-ink">{c.name}</div>
+                  <div className="text-xs text-ink/55 mt-0.5">
+                    DNI <span className="font-mono">{c.dni}</span>
+                    {c.phone && <> · {c.phone}</>}
+                  </div>
+                </div>
+                <Toggle on={c.active} onClick={() => toggleActive(c)} label={c.active ? 'Deshabilitar' : 'Habilitar'} />
+              </div>
+              <div className="mt-2 flex gap-4 text-sm">
+                <button onClick={() => startEdit(c)} className="text-moss-700 font-medium py-1">Editar</button>
+                <button onClick={() => deleteClient(c)} className="text-paprika-500 py-1">Eliminar</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* Desktop: table */}
+        <div className="hidden sm:block overflow-x-auto bg-white/60 rounded-xl border border-ink/10">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-ink/50 text-xs uppercase tracking-wide border-b border-ink/10">
@@ -271,13 +301,7 @@ function ClientsPanel() {
                   <td className="px-4 py-2 font-medium text-ink">{c.name}</td>
                   <td className="px-4 py-2 text-ink/60 text-xs">{c.phone || '—'}</td>
                   <td className="px-4 py-2 text-center">
-                    <button
-                      onClick={() => toggleActive(c)}
-                      className={`relative w-9 h-5 rounded-full transition-colors ${c.active ? 'bg-moss-600' : 'bg-ink/20'}`}
-                      aria-label={c.active ? 'Deshabilitar' : 'Habilitar'}
-                    >
-                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${c.active ? 'translate-x-4' : ''}`} />
-                    </button>
+                    <Toggle on={c.active} onClick={() => toggleActive(c)} label={c.active ? 'Deshabilitar' : 'Habilitar'} />
                   </td>
                   <td className="px-4 py-2 text-right whitespace-nowrap">
                     <button onClick={() => startEdit(c)} className="text-xs text-moss-700 hover:underline mr-3 font-medium">
@@ -299,7 +323,21 @@ function ClientsPanel() {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
+  );
+}
+
+function Toggle({ on, onClick, label }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${on ? 'bg-moss-600' : 'bg-ink/20'}`}
+    >
+      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-4' : ''}`} />
+    </button>
   );
 }

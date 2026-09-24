@@ -229,7 +229,7 @@ export default function FacturadorSync({ products, reload }) {
         disabled={busy}
         onChange={(e) => link(product, e.target.value)}
         onBlur={() => editingId === product.id && setEditingId(null)}
-        className="w-full max-w-xs rounded-md border border-ink/20 px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-moss-600"
+        className="w-full sm:max-w-xs rounded-md border border-ink/20 px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-moss-600"
       >
         <option value="">— Elegir producto del facturador —</option>
         {suggestions.length > 0 && (
@@ -245,6 +245,57 @@ export default function FacturadorSync({ products, reload }) {
           ))}
         </optgroup>
       </select>
+    );
+  }
+
+  function renderFactCell(r) {
+    if (r.f && editingId !== r.p.id) {
+      return (
+        <div>
+          <div className="text-ink">{r.f.name}</div>
+          <div className="text-xs text-ink/50">
+            <span className="font-mono">{currency.format(r.f.sellPrice)}</span> / {r.f.unitType}
+            <button onClick={() => setEditingId(r.p.id)} className="ml-3 py-1 text-moss-700 hover:underline">Cambiar</button>
+            <button onClick={() => link(r.p, null)} className="ml-3 py-1 text-paprika-500 hover:underline">Desvincular</button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <>
+        {renderFactSelect(r.p)}
+        {r.brokenLink && (
+          <p className="text-[11px] text-paprika-500 mt-1">El producto vinculado ya no existe en el facturador.</p>
+        )}
+      </>
+    );
+  }
+
+  function renderFactor(r) {
+    return (
+      <input
+        key={`${r.p.id}-${r.p.facturador_factor}`}
+        defaultValue={Number(r.p.facturador_factor || 1).toLocaleString('es-AR')}
+        inputMode="decimal"
+        disabled={busy}
+        onBlur={(e) => saveFactor(r.p, e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+        title="Ej: 0,5 si en la tienda se vende por 1/2 kg y en el facturador por kg"
+        className="w-14 rounded-md border border-ink/20 px-1.5 py-1 text-center text-sm font-mono bg-white focus:outline-none focus:ring-1 focus:ring-moss-600"
+      />
+    );
+  }
+
+  function renderPriceStatus(r) {
+    if (r.target == null) return <span className="text-xs text-ink/40">—</span>;
+    if (!r.diff) return <span className="text-xs text-moss-600 font-medium">✓ Igual</span>;
+    return (
+      <div>
+        <div className="font-mono font-semibold text-paprika-500">{currency.format(r.target)}</div>
+        <button onClick={() => syncOne(r)} disabled={busy} className="text-xs text-moss-700 hover:underline py-1">
+          Aplicar
+        </button>
+      </div>
     );
   }
 
@@ -353,11 +404,43 @@ export default function FacturadorSync({ products, reload }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar producto..."
-              className="rounded-lg border border-ink/20 px-3 py-2 text-sm bg-white min-w-[200px] focus:outline-none focus:ring-1 focus:ring-moss-600"
+              className="rounded-lg border border-ink/20 px-3 py-2 text-sm bg-white w-full sm:w-auto sm:min-w-[200px] focus:outline-none focus:ring-1 focus:ring-moss-600"
             />
           </div>
 
-          <div className="overflow-x-auto bg-white/60 rounded-xl border border-ink/10">
+          {/* Mobile: cards */}
+          <ul className="sm:hidden space-y-2">
+            {visibleRows.map((r) => (
+              <li key={r.p.id} className={`rounded-xl border border-ink/10 bg-white/60 p-3 ${busy ? 'opacity-60' : ''}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase tracking-wide text-ink/40">Tienda</div>
+                    <div className="font-medium text-ink">{r.p.name}</div>
+                    <div className="font-mono text-xs text-ink/50">{currency.format(r.p.price)}</div>
+                  </div>
+                  <div className="text-right shrink-0">{renderPriceStatus(r)}</div>
+                </div>
+                <div className="mt-2 pt-2 border-t border-ink/10">
+                  <div className="text-[10px] uppercase tracking-wide text-ink/40 mb-0.5">Facturador</div>
+                  {renderFactCell(r)}
+                </div>
+                {r.f && (
+                  <label className="mt-2 flex items-center gap-2 text-xs text-ink/60">
+                    Multiplicador ×{renderFactor(r)}
+                    <span className="text-ink/40">(ej: 0,5 para 1/2 kg)</span>
+                  </label>
+                )}
+              </li>
+            ))}
+            {visibleRows.length === 0 && (
+              <li className="rounded-xl border border-ink/10 bg-white/60 px-4 py-12 text-center text-sm text-ink/40">
+                {filter === 'pending' ? '¡Todo vinculado y con el mismo precio! 🎉' : 'Sin productos que coincidan.'}
+              </li>
+            )}
+          </ul>
+
+          {/* Desktop: table */}
+          <div className="hidden sm:block overflow-x-auto bg-white/60 rounded-xl border border-ink/10">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-ink/50 text-xs uppercase tracking-wide border-b border-ink/10">
@@ -374,53 +457,9 @@ export default function FacturadorSync({ products, reload }) {
                       <div className="font-medium text-ink">{r.p.name}</div>
                       <div className="font-mono text-xs text-ink/50">{currency.format(r.p.price)}</div>
                     </td>
-                    <td className="px-4 py-2.5 min-w-[240px]">
-                      {r.f && editingId !== r.p.id ? (
-                        <div>
-                          <div className="text-ink">{r.f.name}</div>
-                          <div className="text-xs text-ink/50">
-                            <span className="font-mono">{currency.format(r.f.sellPrice)}</span> / {r.f.unitType}
-                            <button onClick={() => setEditingId(r.p.id)} className="ml-2 text-moss-700 hover:underline">Cambiar</button>
-                            <button onClick={() => link(r.p, null)} className="ml-2 text-paprika-500 hover:underline">Desvincular</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          {renderFactSelect(r.p)}
-                          {r.brokenLink && (
-                            <p className="text-[11px] text-paprika-500 mt-1">El producto vinculado ya no existe en el facturador.</p>
-                          )}
-                        </>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 text-center">
-                      {r.f && (
-                        <input
-                          key={`${r.p.id}-${r.p.facturador_factor}`}
-                          defaultValue={Number(r.p.facturador_factor || 1).toLocaleString('es-AR')}
-                          inputMode="decimal"
-                          disabled={busy}
-                          onBlur={(e) => saveFactor(r.p, e.target.value)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                          title="Ej: 0,5 si en la tienda se vende por 1/2 kg y en el facturador por kg"
-                          className="w-14 rounded-md border border-ink/20 px-1.5 py-1 text-center text-sm font-mono bg-white focus:outline-none focus:ring-1 focus:ring-moss-600"
-                        />
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                      {r.target == null ? (
-                        <span className="text-xs text-ink/40">—</span>
-                      ) : r.diff ? (
-                        <div>
-                          <div className="font-mono font-semibold text-paprika-500">{currency.format(r.target)}</div>
-                          <button onClick={() => syncOne(r)} disabled={busy} className="text-xs text-moss-700 hover:underline">
-                            Aplicar
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-moss-600 font-medium">✓ Igual</span>
-                      )}
-                    </td>
+                    <td className="px-4 py-2.5 min-w-[240px]">{renderFactCell(r)}</td>
+                    <td className="px-4 py-2.5 text-center">{r.f && renderFactor(r)}</td>
+                    <td className="px-4 py-2.5 text-right whitespace-nowrap">{renderPriceStatus(r)}</td>
                   </tr>
                 ))}
                 {visibleRows.length === 0 && (
