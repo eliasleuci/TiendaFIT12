@@ -19,7 +19,7 @@ export default function Header({ search, onSearchChange, onAISearch, wholesaleCl
   ) : (
     <Link
       to="/mayorista"
-      className="rounded-full border border-turmeric-400/70 px-3 py-2 text-xs sm:text-sm font-semibold text-turmeric-400 hover:bg-turmeric-400 hover:text-moss-900 transition-colors shrink-0"
+      className="rounded-full bg-turmeric-400 text-moss-900 font-semibold px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-turmeric-500 transition-colors shrink-0"
     >
       Mayoristas
     </Link>
